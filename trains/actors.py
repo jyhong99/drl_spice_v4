@@ -14,6 +14,7 @@ import torch
 
 from simulator.ngspice.workspace import create_experiment_run_root
 from trains.utils import (
+    evaluate,
     get_next_step,
     get_reset_result,
     get_reset_state,
