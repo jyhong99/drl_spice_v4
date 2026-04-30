@@ -1,0 +1,81 @@
+** sch_path: /home/jyhong/projects/lna_optimization_v2/CG_LNA_NoiseFigure.sch
+**.subckt My_LNA
+C_1 net9 net1 {c_1} m=1
+C_S3 net3 Vout {c_s3} m=1
+Vin Vin GND dc 0 ac 1
+V_DD VDD GND {v_dd}
+XM5 net1 Vb4 net4 GND sky130_fd_pr__nfet_01v8 L={l_m} W={w_m5} nf=1 ad='int((nf+1)/2) * W/nf * 0.29' as='int((nf+2)/2) * W/nf * 0.29'
++ pd='2*int((nf+1)/2) * (W/nf + 0.29)' ps='2*int((nf+2)/2) * (W/nf + 0.29)' nrd='0.29 / W' nrs='0.29 / W' sa=0 sb=0 sd=0 mult=1 m=1
+V_b3 Vb3 GND {v_b3}
+R_S5 net4 GND {r_s5} m=1
+C_S4 net1 net2 {c_s4} m=1
+R_b1 Vb1 net2 {r_b} m=1
+XM1 net5 net2 GND GND sky130_fd_pr__nfet_01v8 L={l_m} W={w_m1} nf=1 ad='int((nf+1)/2) * W/nf * 0.29' as='int((nf+2)/2) * W/nf * 0.29'
++ pd='2*int((nf+1)/2) * (W/nf + 0.29)' ps='2*int((nf+2)/2) * (W/nf + 0.29)' nrd='0.29 / W' nrs='0.29 / W' sa=0 sb=0 sd=0 mult=1 m=1
+XM4 net7 Vb3 net1 GND sky130_fd_pr__nfet_01v8 L={l_m} W={w_m4} nf=1 ad='int((nf+1)/2) * W/nf * 0.29' as='int((nf+2)/2) * W/nf * 0.29'
++ pd='2*int((nf+1)/2) * (W/nf + 0.29)' ps='2*int((nf+2)/2) * (W/nf + 0.29)' nrd='0.29 / W' nrs='0.29 / W' sa=0 sb=0 sd=0 mult=1 m=1
+R_D1 VDD net5 {r_d1} m=1
+XM3 VDD net8 net3 GND sky130_fd_pr__nfet_01v8 L={l_m} W={w_m3} nf=1 ad='int((nf+1)/2) * W/nf * 0.29' as='int((nf+2)/2) * W/nf * 0.29'
++ pd='2*int((nf+1)/2) * (W/nf + 0.29)' ps='2*int((nf+2)/2) * (W/nf + 0.29)' nrd='0.29 / W' nrs='0.29 / W' sa=0 sb=0 sd=0 mult=1 m=1
+XM2 net3 net6 GND GND sky130_fd_pr__nfet_01v8 L={l_m} W={w_m2} nf=1 ad='int((nf+1)/2) * W/nf * 0.29' as='int((nf+2)/2) * W/nf * 0.29'
++ pd='2*int((nf+1)/2) * (W/nf + 0.29)' ps='2*int((nf+2)/2) * (W/nf + 0.29)' nrd='0.29 / W' nrs='0.29 / W' sa=0 sb=0 sd=0 mult=1 m=1
+V_b1 Vb1 GND {v_b1}
+V_b2 Vb2 GND {v_b2}
+C_D1 net5 net6 {c_d1} m=1
+R_b2 Vb2 net6 {r_b} m=1
+C_D4 net7 net8 {c_d4} m=1
+R_b3 VDD net8 {r_b} m=1
+R_D4 VDD net7 {r_d4} m=1
+V_b4 Vb4 GND {v_b4}
+R_s Vin net9 50 m=1
+**** begin user architecture code
+
+
+** design_variables_start
+.param v_dd = 1.8
+.param r_b  = 1e+4
+.param c_1  = 1e-11
+.param l_m  = 0.15
+
+.param v_b1 = 0.9053
+.param v_b2 = 0.9053
+.param v_b3 = 0.9053
+.param v_b4 = 0.9053
+.param r_d1 = 105
+.param r_d4 = 105
+.param r_s5 = 105
+.param c_d1 = 2.092e-12
+.param c_d4 = 2.092e-12
+.param c_s3 = 2.092e-12
+.param c_s4 = 2.092e-12
+.param w_m1 = 68.44
+.param w_m2 = 24.11
+.param w_m3 = 24.11
+.param w_m4 = 24.11
+.param w_m5 = 24.11
+** design_variables_end
+
+.lib /home/jyhong/open_pdks/sky130/sky130A/libs.tech/ngspice/sky130.lib.spice tt
+.control
+set filetype=ascii
+let target_frequency = 2.400e+09
+op $ For convergence aids
+
+set sqrnoise
+noise v(Vout) Vin dec 500 1M 8G 1
+setplot noise1
+
+let T = 300.15
+let Rin = 50
+let NoiseFactor = inoise_spectrum / (4 * $&boltz * T * Rin)
+let NoiseFigure = 10*log10(NoiseFactor)
+
+write /home/jyhong/projects/lna_optimization_v2/parallel_simulations/NoiseFigure_0.csv NoiseFigure
+.endc
+
+
+**** end user architecture code
+**.ends
+.GLOBAL GND
+.GLOBAL VDD
+.end

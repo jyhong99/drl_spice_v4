@@ -1,0 +1,82 @@
+** sch_path: /home/jyhong/projects/lna_optimization_v2/CS_LNA_NoiseFigure.sch
+**.subckt My_LNA
+L_S net6 net2 {l_s} m=1
+L_D VDD net3 {l_d} m=1
+R_D VDD net8 {r_d} m=1
+R_LD net3 net8 0 m=1
+R_LS net2 GND 0 m=1
+C_1 net9 net7 {c_1} m=1
+V_DD VDD GND {v_dd}
+L_G net7 net4 {l_g} m=1
+R_LG net4 net5 0 m=1
+XM1 net1 net5 net6 GND sky130_fd_pr__nfet_01v8 L={l_m} W={w_m1} nf=1 ad='int((nf+1)/2) * W/nf * 0.29' as='int((nf+2)/2) * W/nf * 0.29'
++ pd='2*int((nf+1)/2) * (W/nf + 0.29)' ps='2*int((nf+2)/2) * (W/nf + 0.29)' nrd='0.29 / W' nrs='0.29 / W' sa=0 sb=0 sd=0 mult=1 m=1
+C_ex net5 net6 {c_ex} m=1
+XM2 net8 VDD net1 GND sky130_fd_pr__nfet_01v8 L={l_m} W={w_m2} nf=1 ad='int((nf+1)/2) * W/nf * 0.29' as='int((nf+2)/2) * W/nf * 0.29'
++ pd='2*int((nf+1)/2) * (W/nf + 0.29)' ps='2*int((nf+2)/2) * (W/nf + 0.29)' nrd='0.29 / W' nrs='0.29 / W' sa=0 sb=0 sd=0 mult=1 m=1
+C_D net8 Vout {c_d} m=1
+Vin Vin GND dc 0 ac 1
+V_b Vb GND {v_b}
+R_b Vb net7 {r_b} m=1
+R_s Vin net9 50 m=1
+**** begin user architecture code
+
+
+** design_variables_start
+.param v_dd = 1.8
+.param r_b  = 1.000e+4
+.param c_1  = 1.000e-11
+.param l_m  = 0.15
+
+.param v_b  = 1.0
+.param r_d  = 500
+.param l_d  = 1.529e-08
+.param l_g  = 1.529e-08
+.param l_s  = 1.268e-11
+.param c_d  = 1.000e-11
+.param c_ex = 1.000e-11
+.param w_m1 = 3.584
+.param w_m2 = 2.046
+** design_variables_end
+
+
+.lib /home/jyhong/open_pdks/sky130/sky130A/libs.tech/ngspice/sky130.lib.spice tt
+.control
+set filetype=ascii
+let target_frequency = 2.400e+09
+op $ For convergence aids
+
+let Q_factor = 20
+let R_ld_res = @r_ld[resistance]
+let R_lg_res = @r_lg[resistance]
+let R_ls_res = @r_ls[resistance]
+let L_d_ind  = @l_d[inductance]
+let L_g_ind  = @l_g[inductance]
+let L_s_ind  = @l_s[inductance]
+
+let R_ld_res = (2 * $&pi * $&target_frequency * $&L_d_ind) / Q_factor
+let R_lg_res = (2 * $&pi * $&target_frequency * $&L_g_ind) / Q_factor
+let R_ls_res = (2 * $&pi * $&target_frequency * $&L_s_ind) / Q_factor
+alter R_LD resistance $&R_ld_res
+alter R_LG resistance $&R_lg_res
+alter R_LS resistance $&R_ls_res
+
+
+set sqrnoise
+noise v(Vout) Vin dec 500 1M 8G 1
+setplot noise1
+
+let T = 300.15
+let Rin = 50
+let NoiseFactor = inoise_spectrum / (4 * $&boltz * T * Rin)
+let NoiseFigure = 10*log10(NoiseFactor)
+
+write /home/jyhong/projects/lna_optimization_v2/parallel_simulations/NoiseFigure_0.csv NoiseFigure
+.endc
+
+
+**** end user architecture code
+**.ends
+.GLOBAL GND
+.GLOBAL VDD
+.end
